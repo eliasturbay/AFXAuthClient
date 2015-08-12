@@ -105,15 +105,32 @@ extern NSString *const AFXAuthModeReverse;
 @property (readonly, nonatomic, copy) NSString *secret;
 
 /**
+ 
+ */
+@property (nonatomic, copy) NSNumber *userID;
+
+/**
 
  */
 - (id)initWithQueryString:(NSString *)queryString;
+
+/**
+ 
+ */
+- (id)initWithJSONString:(NSData *)jsonString;
 
 /**
 
  */
 - (id)initWithKey:(NSString *)key
            secret:(NSString *)secret;
+
+/**
+ 
+ */
+- (id)initWithKey:(NSString *)key
+           secret:(NSString *)secret
+           userID:(NSNumber *)userID;
 
 #pragma mark - NSCoding
 

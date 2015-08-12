@@ -211,15 +211,24 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
     _username = username;
     _password = password;
 
-    NSDictionary *parameters = @{@"x_auth_mode": mode,
-                                 @"x_auth_password": self.password,
-                                 @"x_auth_username": self.username};
+    NSDictionary *parameters = @{@"email": self.username,
+                                 @"password": self.password};
 
-    NSMutableURLRequest *request = [self requestWithMethod:accessMethod path:accessTokenPath parameters:parameters];
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:parameters
+                                                       options:0
+                                                         error:nil];
 
+    NSMutableURLRequest *request = [self requestWithMethod:accessMethod path:accessTokenPath parameters:nil];
+
+    [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)[jsonData length]] forHTTPHeaderField:@"Content-Length"];
+    [request setHTTPBody:jsonData];
+    
     AFHTTPRequestOperation *operation = [self HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
-        NSString *queryString = [[NSString alloc] initWithData:responseObject encoding:NSUTF8StringEncoding];
-        _token = [[AFXAuthToken alloc] initWithQueryString:queryString];
+        
+        _token = [[AFXAuthToken alloc] initWithJSONString:responseObject];
+        
         if (success)
             success(_token);
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
@@ -286,6 +295,7 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
 @implementation AFXAuthToken
 @synthesize key = _key;
 @synthesize secret = _secret;
+@synthesize userID = _userID;
 
 - (id)initWithQueryString:(NSString *)queryString
 {
@@ -295,6 +305,23 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
 
     NSDictionary *attributes = AFParametersFromQueryString(queryString);
     return [self initWithKey:[attributes objectForKey:@"oauth_token"] secret:[attributes objectForKey:@"oauth_token_secret"]];
+}
+
+- (id)initWithJSONString:(NSData *)jsonString
+{
+    if (!jsonString || [jsonString length] == 0) {
+        return nil;
+    }
+    
+    NSError *jsonError;
+    NSDictionary *json = [NSJSONSerialization JSONObjectWithData:jsonString
+                                                         options:NSJSONReadingMutableContainers
+                                                           error:&jsonError];
+    if (!jsonError) {
+        return [self initWithKey:[json objectForKey:@"oauth_token"] secret:[json objectForKey:@"oauth_token_secret"] userID:[json objectForKey:@"tailor_id"]];
+    } else {
+        return nil;
+    }
 }
 
 - (id)initWithKey:(NSString *)key
@@ -311,6 +338,27 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
     self.key = key;
     self.secret = secret;
 
+    return self;
+}
+
+- (id)initWithKey:(NSString *)key
+           secret:(NSString *)secret
+           userID:(NSNumber *)userID
+{
+    NSParameterAssert(key);
+    NSParameterAssert(secret);
+    
+    self = [super init];
+    if (!self) {
+        return nil;
+    }
+    
+    self.key = key;
+    self.secret = secret;
+    if (userID) {
+        self.userID = userID;
+    }
+    
     return self;
 }
 
