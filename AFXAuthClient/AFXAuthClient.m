@@ -194,7 +194,7 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
                                   accessMethod:(NSString *)accessMethod
                                       username:(NSString *)username
                                       password:(NSString *)password
-                                       success:(void (^)(AFXAuthToken *accessToken))success
+                                       success:(void (^)(id result))success
                                        failure:(void (^)(NSError *error))failure
 {
     [self authorizeUsingXAuthWithAccessTokenPath:accessTokenPath accessMethod:accessMethod mode:AFXAuthModeClient username:username password:password success:success failure:failure];
@@ -205,7 +205,7 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
                                          mode:(NSString *)mode
                                      username:(NSString *)username
                                      password:(NSString *)password
-                                      success:(void (^)(AFXAuthToken *))success
+                                      success:(void (^)(id))success
                                       failure:(void (^)(NSError *))failure
 {
     _username = username;
@@ -214,12 +214,30 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
     NSDictionary *parameters = @{@"email": self.username,
                                  @"password": self.password};
 
+    [self authorizeUsingXAuthWithAccessTokenPath:accessTokenPath accessMethod:accessMethod mode:mode dictionary:parameters success:success failure:failure];
+}
+
+-(void)authorizeUsingXAuthWithAccessTokenPath:(NSString *)accessTokenPath
+                                 accessMethod:(NSString *)accessMethod
+                                   dictionary:(NSDictionary *)parameters
+                                      success:(void (^)(id))success
+                                      failure:(void (^)(NSError *))failure {
+    [self authorizeUsingXAuthWithAccessTokenPath:accessTokenPath accessMethod:accessMethod mode:AFXAuthModeClient dictionary:parameters success:success failure:failure];
+}
+
+-(void)authorizeUsingXAuthWithAccessTokenPath:(NSString *)accessTokenPath
+                                 accessMethod:(NSString *)accessMethod
+                                         mode:(NSString *)mode
+                                   dictionary:(NSDictionary *)parameters
+                                      success:(void (^)(id))success
+                                      failure:(void (^)(NSError *))failure
+{
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:parameters
                                                        options:0
                                                          error:nil];
-
+    
     NSMutableURLRequest *request = [self requestWithMethod:accessMethod path:accessTokenPath parameters:nil];
-
+    
     [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
     [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)[jsonData length]] forHTTPHeaderField:@"Content-Length"];
@@ -229,13 +247,18 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
         
         _token = [[AFXAuthToken alloc] initWithJSONString:responseObject];
         
-        if (success)
-            success(_token);
+        if (success) {
+            if (_token.key && [_token.key length] > 0) {
+                success(_token);
+            } else {
+                success(responseObject);
+            }
+        }
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         if (failure)
             failure(error);
     }];
-
+    
     [self enqueueHTTPRequestOperation:operation];
 }
 
@@ -318,7 +341,10 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
                                                          options:NSJSONReadingMutableContainers
                                                            error:&jsonError];
     if (!jsonError) {
-        return [self initWithKey:[json objectForKey:@"oauth_token"] secret:[json objectForKey:@"oauth_token_secret"] userID:[json objectForKey:@"tailor_id"]];
+        NSString *key = [json objectForKey:@"oauth_token"] ?: @"";
+        NSString *secret = [json objectForKey:@"oauth_token_secret"] ?: @"";
+        NSString *userId = [json objectForKey:@"tailor_id"] ?: @"0";
+        return [self initWithKey:key secret:secret userID:userId];
     } else {
         return nil;
     }
@@ -343,7 +369,7 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
 
 - (id)initWithKey:(NSString *)key
            secret:(NSString *)secret
-           userID:(NSNumber *)userID
+           userID:(NSString *)userID
 {
     NSParameterAssert(key);
     NSParameterAssert(secret);

@@ -62,6 +62,18 @@ extern NSString *const AFXAuthModeReverse;
 /// @name Authenticating
 ///---------------------
 
+-(void)authorizeUsingXAuthWithAccessTokenPath:(NSString *)accessTokenPath
+                                 accessMethod:(NSString *)accessMethod
+                                   dictionary:(NSDictionary *)parameters
+                                      success:(void (^)(id))success
+                                      failure:(void (^)(NSError *))failure;
+
+-(void)authorizeUsingXAuthWithAccessTokenPath:(NSString *)accessTokenPath
+                                 accessMethod:(NSString *)accessMethod
+                                         mode:(NSString *)mode
+                                   dictionary:(NSDictionary *)parameters
+                                      success:(void (^)(id))success
+                                      failure:(void (^)(NSError *))failure;
 
 /**
  Authorize user using x_auth_mode = client_auth
@@ -70,7 +82,7 @@ extern NSString *const AFXAuthModeReverse;
                                   accessMethod:(NSString *)accessMethod
                                       username:(NSString *)username
                                       password:(NSString *)password
-                                       success:(void (^)(AFXAuthToken *accessToken))success
+                                       success:(void (^)(id result))success
                                        failure:(void (^)(NSError *error))failure;
 
 /**
@@ -81,7 +93,7 @@ extern NSString *const AFXAuthModeReverse;
                                           mode:(NSString *)mode
                                       username:(NSString *)username
                                       password:(NSString *)password
-                                       success:(void (^)(AFXAuthToken *accessToken))success
+                                       success:(void (^)(id result))success
                                        failure:(void (^)(NSError *error))failure;
 
 
@@ -107,7 +119,7 @@ extern NSString *const AFXAuthModeReverse;
 /**
  
  */
-@property (nonatomic, copy) NSNumber *userID;
+@property (nonatomic, copy) NSString *userID;
 
 /**
 
