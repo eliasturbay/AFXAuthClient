@@ -245,10 +245,11 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
     
     AFHTTPRequestOperation *operation = [self HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
         
-        _token = [[AFXAuthToken alloc] initWithJSONString:responseObject];
+        AFXAuthToken *tempToken = [[AFXAuthToken alloc] initWithJSONString:responseObject];
         
         if (success) {
-            if (_token.key && [_token.key length] > 0) {
+            if (tempToken.key && [tempToken.key length] > 0) {
+                _token = tempToken;
                 success(_token);
             } else {
                 success(responseObject);
@@ -286,7 +287,7 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
     _timestamp = [NSString stringWithFormat:@"%d", (int)ceil((float)[[NSDate date] timeIntervalSince1970])];
 
     NSMutableURLRequest *request = [super requestWithMethod:method path:path parameters:parameters];
-    NSMutableDictionary *authorizationHeader = [self authorizationHeaderWithRequest:request parameters:parameters];
+    NSMutableDictionary *authorizationHeader = [self authorizationHeaderWithRequest:request parameters:nil];
 
     [request setValue:[self authorizationHeaderForParameters:authorizationHeader] forHTTPHeaderField:@"Authorization"];
     [request setHTTPShouldHandleCookies:NO];
@@ -299,7 +300,7 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
     _timestamp = [NSString stringWithFormat:@"%d", (int)ceil((float)[[NSDate date] timeIntervalSince1970])];
 
     NSMutableURLRequest *request = [super multipartFormRequestWithMethod:method path:path parameters:parameters constructingBodyWithBlock:block];
-    NSMutableDictionary *authorizationHeader = [self authorizationHeaderWithRequest:request parameters:parameters];
+    NSMutableDictionary *authorizationHeader = [self authorizationHeaderWithRequest:request parameters:nil];
 
     [request setValue:[self authorizationHeaderForParameters:authorizationHeader] forHTTPHeaderField:@"Authorization"];
     [request setHTTPShouldHandleCookies:NO];
