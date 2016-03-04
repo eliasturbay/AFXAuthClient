@@ -119,9 +119,7 @@ extern NSString *const AFXAuthModeReverse;
 /**
  
  */
-@property (nonatomic, copy) NSString *userID;
-@property (nonatomic, copy) NSString *accountID;
-@property (nonatomic, copy) NSString *bussinessOrgID;
+@property (readonly, nonatomic, copy) NSDictionary *userInfo;
 
 /**
 
@@ -144,9 +142,7 @@ extern NSString *const AFXAuthModeReverse;
  */
 - (id)initWithKey:(NSString *)key
            secret:(NSString *)secret
-           userID:(NSString *)userID
-        accountID:(NSString *)accountID
-   bussinessOrgID:(NSString *)bussinessOrgID;
+         userInfo:(NSDictionary *)userInfo;
 
 #pragma mark - NSCoding
 

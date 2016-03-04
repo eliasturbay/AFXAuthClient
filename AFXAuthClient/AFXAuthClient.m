@@ -314,12 +314,13 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
 @interface AFXAuthToken ()
 @property (readwrite, nonatomic, copy) NSString *key;
 @property (readwrite, nonatomic, copy) NSString *secret;
+@property (readwrite, nonatomic, copy) NSDictionary *userInfo;
 @end
 
 @implementation AFXAuthToken
 @synthesize key = _key;
 @synthesize secret = _secret;
-@synthesize userID = _userID;
+@synthesize userInfo = _userInfo;
 
 - (id)initWithQueryString:(NSString *)queryString
 {
@@ -344,10 +345,7 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
     if (!jsonError) {
         NSString *key = [json objectForKey:@"oauth_token"] ?: @"";
         NSString *secret = [json objectForKey:@"oauth_token_secret"] ?: @"";
-        NSString *userId = [json objectForKey:@"customer_id"] ?: @"0";
-        NSString *accountId = [json objectForKey:@"account_id"] ?: @"0";
-        NSString *bussinessOrgId = [json objectForKey:@"business_org_id"] ?: @"0";
-        return [self initWithKey:key secret:secret userID:userId accountID:accountId bussinessOrgID:bussinessOrgId];
+        return [self initWithKey:key secret:secret userInfo:json];
     } else {
         return nil;
     }
@@ -372,9 +370,7 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
 
 - (id)initWithKey:(NSString *)key
            secret:(NSString *)secret
-           userID:(NSString *)userID
-        accountID:(NSString *)accountID
-   bussinessOrgID:(NSString *)bussinessOrgID
+         userInfo:(NSDictionary *)userInfo
 {
     NSParameterAssert(key);
     NSParameterAssert(secret);
@@ -386,8 +382,8 @@ static inline NSString * AFHMACSHA1Signature(NSString *baseString, NSString *con
     
     self.key = key;
     self.secret = secret;
-    if (userID) {
-        self.userID = userID;
+    if (userInfo) {
+        self.userInfo = userInfo;
     }
     
     return self;
